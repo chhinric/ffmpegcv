@@ -10,7 +10,7 @@ class FFmpegWriter:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, type, value, traceback):
         self.release()
 
@@ -28,10 +28,10 @@ class FFmpegWriter:
         elif not isinstance(codec, str):
             codec = 'h264'
             warnings.simplefilter('''
-                Codec should be a string. Eg `h264`, `h264_nvenc`. 
+                Codec should be a string. Eg `h264`, `h264_nvenc`.
                 You may used CV2.VideoWriter_fourcc, which will be ignored.
                 ''')
-        
+
         vid = FFmpegWriter()
         vid.fps, vid.size = fps, frameSize
         vid.width, vid.height = vid.size if vid.size else (None, None)
@@ -40,19 +40,23 @@ class FFmpegWriter:
         return vid
 
     def _init_video_stream(self):
-        args = (f'ffmpeg -y -loglevel warning ' 
+        args = (f'ffmpeg -y -loglevel warning '
                 f'-f rawvideo -pix_fmt {self.pix_fmt} -s {self.width}x{self.height} -r {self.fps} -i pipe: '
-                f'-r {self.fps} -c:v {self.codec} -pix_fmt yuv420p "{self.filename}"')
+                f'-r {self.fps} -c:v {self.codec} -pix_fmt yuv420p')
+        if self.filename[:4] == 'rtmp':
+            args += f' -f flv -flvflags no_duration_filesize'
+        args += f' "{self.filename}"'
+        print('[OUTPUT]', args)
         self.process = run_async(args)
 
     def write(self, img):
         if self.waitInit:
             if self.size is None:
-                self.size = (img.shape[1], img.shape[0])          
+                self.size = (img.shape[1], img.shape[0])
             self.width, self.height = self.size
             self._init_video_stream()
             self.waitInit = False
-        
+
         self.iframe += 1
         assert self.size == (img.shape[1], img.shape[0])
         img = img.astype(np.uint8).tobytes()
@@ -77,7 +81,7 @@ class FFmpegWriterNV(FFmpegWriter):
         elif not isinstance(codec, str):
             codec = 'hevc_nvenc'
             warnings.simplefilter('''
-                Codec should be a string. Eg `h264`, `h264_nvenc`. 
+                Codec should be a string. Eg `h264`, `h264_nvenc`.
                 You may used CV2.VideoWriter_fourcc, which will be ignored.
                 ''')
         elif codec.endswith('_nvenc'):
@@ -99,5 +103,9 @@ class FFmpegWriterNV(FFmpegWriter):
         args = (f'ffmpeg -y -loglevel warning '
             f'-f rawvideo -pix_fmt {self.pix_fmt} -s {self.width}x{self.height} -r {self.fps} -i pipe: '
             f'-preset {self.preset} '
-            f'-r {self.fps} -gpu {self.gpu} -c:v {self.codec} -pix_fmt yuv420p "{self.filename}"')
+            f'-r {self.fps} -gpu {self.gpu} -c:v {self.codec} -pix_fmt yuv420p')
+        if self.filename[:4] == 'rtmp':
+            args += f' -f flv -flvflags no_duration_filesize'
+        args += f' "{self.filename}"'
+        print('[OUTPUT]', args)
         self.process = run_async(args)

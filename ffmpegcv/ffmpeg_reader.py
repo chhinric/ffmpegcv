@@ -1,7 +1,7 @@
 import numpy as np
 import pprint
 import os
-from .video_info import (run_async, get_info, get_num_NVIDIA_GPUs, 
+from .video_info import (run_async, get_info, get_num_NVIDIA_GPUs,
                         decoder_to_nvidia, release_process)
 
 
@@ -15,7 +15,7 @@ class FFmpegReader:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, type, value, traceback):
         self.release()
 
@@ -75,12 +75,12 @@ class FFmpegReader:
                 paddings = {'center': ((dst_width - re_width) // 2, (dst_height - re_height) // 2),
                             'topleft': (0, 0),
                             'topright': (dst_width - re_width, 0),
-                            'bottomleft': (0, dst_height - re_height), 
+                            'bottomleft': (0, dst_height - re_height),
                             'bottomright': (dst_width - re_width, dst_height - re_height)}
                 assert resize_keepratioalign in paddings, 'resize_keepratioalign must be one of "center"(mmpose), "topleft"(mmdetection), "topright", "bottomleft", "bottomright"'
                 xpading, ypading = paddings[resize_keepratioalign]
                 padopt = f'pad={dst_width}:{dst_height}:{xpading}:{ypading}:black'
-        
+
         if any([cropopt, scaleopt, padopt]):
             filterstr = ','.join(x for x in [cropopt, scaleopt, padopt] if x)
             filteropt = f'-vf {filterstr}'
@@ -91,6 +91,7 @@ class FFmpegReader:
                 f' -vcodec {vid.codec} -r {vid.fps} -i "{filename}" '
                 f' {filteropt} -pix_fmt {pix_fmt} -r {vid.fps} -f rawvideo pipe:')
 
+        print('[INPUT]', args)
         vid.process = run_async(args)
         vid.size = (vid.width, vid.height)
         vid.pix_fmt = pix_fmt
@@ -130,7 +131,7 @@ class FFmpegReader:
 
 
 class FFmpegReaderNV(FFmpegReader):
-    def _get_opts(vid, videoinfo, crop_xywh, resize, 
+    def _get_opts(vid, videoinfo, crop_xywh, resize,
                   resize_keepratio, resize_keepratioalign):
         vid.origin_width = videoinfo.width
         vid.origin_height = videoinfo.height
@@ -170,7 +171,7 @@ class FFmpegReaderNV(FFmpegReader):
                 paddings = {'center': ((dst_width - re_width) // 2, (dst_height - re_height) // 2),
                             'topleft': (0, 0),
                             'topright': (dst_width - re_width, 0),
-                            'bottomleft': (0, dst_height - re_height), 
+                            'bottomleft': (0, dst_height - re_height),
                             'bottomright': (dst_width - re_width, dst_height - re_height)}
                 assert resize_keepratioalign in paddings, 'resize_keepratioalign must be one of "center"(mmpose), "topleft"(mmdetection), "topright", "bottomleft", "bottomright"'
                 xpading, ypading = paddings[resize_keepratioalign]
@@ -181,8 +182,8 @@ class FFmpegReaderNV(FFmpegReader):
         return cropopt, scaleopt, filteropt
 
     @staticmethod
-    def VideoReader(filename, pix_fmt, crop_xywh, 
-                    resize, resize_keepratio, resize_keepratioalign, 
+    def VideoReader(filename, pix_fmt, crop_xywh,
+                    resize, resize_keepratio, resize_keepratioalign,
                     gpu):
         assert os.path.exists(filename) and os.path.isfile(filename), f'{filename} not exists'
         assert pix_fmt in ['rgb24', 'bgr24', 'yuv420p', 'nv12']
@@ -192,7 +193,7 @@ class FFmpegReaderNV(FFmpegReader):
         assert resize is None or len(resize) == 2, 'resize must be a tuple of (width, height)'
         videoinfo = get_info(filename)
         vid = FFmpegReaderNV()
-        cropopt, scaleopt, filteropt = vid._get_opts(videoinfo, crop_xywh, resize, 
+        cropopt, scaleopt, filteropt = vid._get_opts(videoinfo, crop_xywh, resize,
             resize_keepratio, resize_keepratioalign)
         vid.codecNV = decoder_to_nvidia(vid.codec)
 
