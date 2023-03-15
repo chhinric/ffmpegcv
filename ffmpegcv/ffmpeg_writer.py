@@ -22,7 +22,7 @@ class FFmpegWriter:
         return f'{self.__class__}\n'  + props
 
     @staticmethod
-    def VideoWriter(filename, codec, fps, frameSize, pix_fmt):
+    def VideoWriter(filename, codec, fps, frameSize, pix_fmt, logfilename=None):
         if codec is None:
             codec = 'h264'
         elif not isinstance(codec, str):
@@ -37,6 +37,7 @@ class FFmpegWriter:
         vid.width, vid.height = vid.size if vid.size else (None, None)
         vid.codec, vid.pix_fmt, vid.filename = codec, pix_fmt, filename
         vid.waitInit = True
+        vid.logfilename = logfilename
         return vid
 
     def _init_video_stream(self):
@@ -47,7 +48,12 @@ class FFmpegWriter:
             args += f' -f flv -flvflags no_duration_filesize'
         args += f' "{self.filename}"'
         print('[OUTPUT]', args)
-        self.process = run_async(args)
+        if self.logfilename is not None:
+            self._logfile = open(self.logfilename, 'a')
+            self._logfile.write(f'[OUTPUT] {args}\n')
+            self.process = run_async(args, stderr=self._logfile)
+        else:
+            self.process = run_async(args)
 
     def write(self, img):
         if self.waitInit:
@@ -65,6 +71,8 @@ class FFmpegWriter:
     def release(self):
         if hasattr(self, 'process'):
             release_process(self.process)
+        if hasattr(self, '_logfile'):
+            self._logfile.close()
 
     def close(self):
         return self.release()
@@ -72,7 +80,7 @@ class FFmpegWriter:
 
 class FFmpegWriterNV(FFmpegWriter):
     @staticmethod
-    def VideoWriter(filename, codec, fps, frameSize, pix_fmt, gpu):
+    def VideoWriter(filename, codec, fps, frameSize, pix_fmt, gpu, logfilename=None):
         numGPU = get_num_NVIDIA_GPUs()
         assert numGPU
         gpu = int(gpu) % numGPU if gpu is not None else 0
@@ -96,6 +104,7 @@ class FFmpegWriterNV(FFmpegWriter):
         vid.codec, vid.pix_fmt, vid.filename = codec, pix_fmt, filename
         vid.gpu = gpu
         vid.waitInit = True
+        vid.logfilename = logfilename
         return vid
 
     def _init_video_stream(self):
@@ -108,4 +117,9 @@ class FFmpegWriterNV(FFmpegWriter):
             args += f' -f flv -flvflags no_duration_filesize'
         args += f' "{self.filename}"'
         print('[OUTPUT]', args)
-        self.process = run_async(args)
+        if self.logfilename is not None:
+            self._logfile = open(self.logfilename, 'a')
+            self._logfile.write(f'[OUTPUT] {args}\n')
+            self.process = run_async(args, stderr=self._logfile)
+        else:
+            self.process = run_async(args)

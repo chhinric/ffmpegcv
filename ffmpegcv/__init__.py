@@ -42,8 +42,8 @@ def _check_nvidia():
     return True
 
 
-def VideoCapture(file, 
-                 codec=None, 
+def VideoCapture(file,
+                 codec=None,
                  pix_fmt='bgr24',
                  crop_xywh=None,
                  resize=None,
@@ -125,7 +125,7 @@ def VideoCapture(file,
     ```
     cap = ffmpegcv.VideoCapture(file, resize=(640, 480), resize_keepratio=True)
     ```
-    
+
     Crop and then resize the video.
     ```python
     cap = ffmpegcv.VideoCapture(file, crop_xywh=(0, 0, 640, 480), resize=(512, 512))
@@ -136,14 +136,15 @@ def VideoCapture(file,
                                     resize, resize_keepratio, resize_keepratioalign)
 
 
-VideoReader=VideoCapture                                                                 
+VideoReader=VideoCapture
 
 
-def VideoWriter(file, 
-                codec=None, 
-                fps=30, 
-                frameSize=None, 
-                pix_fmt='bgr24'):
+def VideoWriter(file,
+                codec=None,
+                fps=30,
+                frameSize=None,
+                pix_fmt='bgr24',
+                logfilename=None):
     """
     Alternative to cv2.VideoWriter
 
@@ -156,7 +157,7 @@ def VideoWriter(file,
     fps : number
         Frames per second. Optional. Default is 30.
     frameSize : tuple
-        Frame size. (width, height). Optional. Default is `None`, which is 
+        Frame size. (width, height). Optional. Default is `None`, which is
         decided by the size of the first frame.
     pix_fmt : str
         Pixel format of input. ['bgr24' | 'rgb24']. Optional. Default is 'bgr24'.
@@ -166,8 +167,8 @@ def VideoWriter(file,
     opencv
     ```
     out = cv2.VideoWriter('outpy.avi',
-                          cv2.VideoWriter_fourcc('M','J','P','G'), 
-                          10, 
+                          cv2.VideoWriter_fourcc('M','J','P','G'),
+                          10,
                           (w, h))
     out.write(frame1)
     out.write(frame2)
@@ -201,7 +202,7 @@ def VideoWriter(file,
 
     Author: Chenxinfeng 2022-04-16, cxf529125853@163.com
     """
-    return FFmpegWriter.VideoWriter(file, codec, fps, frameSize, pix_fmt)
+    return FFmpegWriter.VideoWriter(file, codec, fps, frameSize, pix_fmt, logfilename=logfilename)
 
 
 def VideoCaptureNV(file,
@@ -215,8 +216,8 @@ def VideoCaptureNV(file,
     `ffmpegcv.VideoCaptureNV` is a gpu version for `ffmpegcv.VideoCapture`.
     """
     _check_nvidia()
-    return FFmpegReaderNV.VideoReader(file, pix_fmt, crop_xywh, 
-                                      resize, resize_keepratio, resize_keepratioalign, 
+    return FFmpegReaderNV.VideoReader(file, pix_fmt, crop_xywh,
+                                      resize, resize_keepratio, resize_keepratioalign,
                                       gpu)
 
 VideoReaderNV = VideoCaptureNV
@@ -226,12 +227,13 @@ def VideoWriterNV(file,
                   fps=30,
                   frameSize=None,
                   pix_fmt='bgr24',
-                  gpu=0):
+                  gpu=0,
+                  logfilename=None):
     """
     `ffmpegcv.VideoWriterNV` is a gpu version for `ffmpegcv.VideoWriter`.
     """
     _check_nvidia()
-    return FFmpegWriterNV.VideoWriter(file, codec, fps, frameSize, pix_fmt, gpu)
+    return FFmpegWriterNV.VideoWriter(file, codec, fps, frameSize, pix_fmt, gpu, logfilename=logfilename)
 
 
 def VideoCaptureCAM(camname="OBS Virtual Camera",

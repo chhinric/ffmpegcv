@@ -12,7 +12,7 @@ def get_info(video):
     assert (root[0].tag, root[0][0].tag) == ('streams', 'stream')
     vinfo = root[0][0].attrib
 
-    VideoInfo = namedtuple('VideoInfo', ['width', 'height', 'fps', 'count', 
+    VideoInfo = namedtuple('VideoInfo', ['width', 'height', 'fps', 'count',
                                         'codec', 'duration'])
     outinfo = dict()
     outinfo['width'] = int(vinfo['width'])
@@ -49,12 +49,12 @@ def encoder_to_nvidia(codec):
         return codec
     else:
         raise Exception('No NV codec found for %s' % codec)
-    
+
 
 def decoder_to_nvidia(codec):
     codec_map = {'av1'       : 'av1_cuvid',
                  'h264'      : 'h264_cuvid',
-                 'x264'      : 'h264_cuvid',    
+                 'x264'      : 'h264_cuvid',
                  'hevc'      : 'hevc_cuvid',
                  'x265'      : 'hevc_cuvid',
                  'h265'      : 'hevc_cuvid',
@@ -65,7 +65,7 @@ def decoder_to_nvidia(codec):
                  'vp1'       : 'vp1_cuvid',
                  'vp8'       : 'vp8_cuvid',
                  'vp9'       : 'vp9_cuvid'}
-    
+
     if codec in codec_map:
         return codec_map[codec]
     elif codec in codec_map.values():
@@ -74,12 +74,12 @@ def decoder_to_nvidia(codec):
         raise Exception('No NV codec found for %s' % codec)
 
 
-def run_async(args):
+def run_async(args, stderr=subprocess.DEVNULL):
     quiet = True
-    stderr_stream = subprocess.DEVNULL if quiet else None
+    stderr_stream = stderr
     bufsize = -1
     return Popen(
-        args, stdin=PIPE, stdout=PIPE, stderr=stderr_stream, 
+        args, stdin=PIPE, stdout=PIPE, stderr=stderr_stream,
         shell=isinstance(args, str), bufsize=bufsize
     )
 
